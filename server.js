@@ -32,7 +32,7 @@ async function kitFetch(endpoint, method = 'GET', body = null) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.KIT_API_KEY}`,
+      'X-Kit-Api-Key': process.env.KIT_API_KEY,
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
@@ -90,7 +90,7 @@ app.post('/api/subscribe', async (req, res) => {
     await kitFetch('/subscribers', 'POST', {
       email_address: email,
       first_name: firstName,
-      custom_fields: {
+      fields: {
         quiz_name:            quizSlug,
         quiz_score:           `${score}/${totalQuestions}`,
         quiz_result:          tier.label,
@@ -122,7 +122,7 @@ app.post('/api/subscribe', async (req, res) => {
 
 // ─── Serve built Vite app (production) ───────────────────────
 app.use(express.static(path.join(__dirname, 'dist')));
-app.get('*', (_, res) =>
+app.get('/{*splat}', (_, res) =>
   res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 );
 
