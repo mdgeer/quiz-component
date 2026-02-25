@@ -1,16 +1,8 @@
 import { useState } from "react";
 
-const LEVELS = [
-  { value: "beginner", label: "Beginner", sub: "20+ handicap" },
-  { value: "mid", label: "Mid-handicap", sub: "10–20" },
-  { value: "single", label: "Single digit", sub: "5–10" },
-  { value: "scratch", label: "Scratch or better", sub: "Under 5" },
-];
-
 export default function EmailForm({ config, onSubmit, submitError, onErrorClear }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [level, setLevel] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +27,7 @@ export default function EmailForm({ config, onSubmit, submitError, onErrorClear 
     }
     setErrors({});
     setLoading(true);
-    await onSubmit({ name: name.trim(), email: email.trim(), level });
+    await onSubmit({ name: name.trim(), email: email.trim() });
     setLoading(false);
   }
 
@@ -65,24 +57,6 @@ export default function EmailForm({ config, onSubmit, submitError, onErrorClear 
           disabled={loading}
         />
         {errors.email && <span className="field-error">{errors.email}</span>}
-      </div>
-
-      <div className="level-selector">
-        <p className="level-selector-label">What's your current level?</p>
-        <div className="level-grid">
-          {LEVELS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`level-btn${level === opt.value ? " level-btn-selected" : ""}`}
-              onClick={() => setLevel(opt.value)}
-              disabled={loading}
-            >
-              <span className="level-btn-label">{opt.label}</span>
-              <span className="level-btn-sub">{opt.sub}</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       {submitError && <p className="submit-error">{submitError}</p>}

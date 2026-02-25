@@ -71,6 +71,17 @@ body {
 .intro-subheadline {
   font-size: 1.05rem;
   color: var(--color-muted);
+  margin-bottom: 16px;
+}
+
+.intro-body {
+  font-size: 1rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.intro-body:last-of-type {
   margin-bottom: 32px;
 }
 

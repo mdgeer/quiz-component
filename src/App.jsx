@@ -41,16 +41,21 @@ export default function App() {
     }
   }
 
-  async function handleSubmit({ name, email, level }) {
+  async function handleSubmit({ name, email }) {
     setSubmitError("");
+    const LETTERS = ["A", "B", "C", "D"];
+    const answerFields = {};
+    answers.forEach((a) => {
+      const answer = quizConfig.questions[a.questionIndex].answers[a.answerIndex];
+      answerFields[`quiz_answer_${a.questionIndex}`] = `${LETTERS[a.answerIndex]}) ${answer.text}`;
+    });
+    const scorePercent = `${Math.round((score / quizConfig.questions.length) * 100)}%`;
+
     const payload = {
       name,
       email,
-      level,
-      score,
-      totalQuestions: quizConfig.questions.length,
-      quizSlug: quizConfig.quizSlug,
-      answers,
+      answerFields,
+      scorePercent,
     };
 
     try {

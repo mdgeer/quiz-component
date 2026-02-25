@@ -10,22 +10,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const KIT_API = 'https://api.kit.com/v4';
 const PORT = process.env.PORT || 3000;
 
-// ─── Score → tier mapping (10-question quiz) ─────────────────
-// 0–4  → Bogey Mindset
-// 5–6  → Solid Thinker
-// 7–8  → Course Manager
-// 9–10 → Tour Mentality
-const TIERS = [
-  { max: 4,  label: 'Bogey Mindset',   slug: 'bogey-mindset'   },
-  { max: 6,  label: 'Solid Thinker',   slug: 'solid-thinker'   },
-  { max: 8,  label: 'Course Manager',  slug: 'course-manager'  },
-  { max: 10, label: 'Tour Mentality',  slug: 'tour-mentality'  },
-];
-
-function getTier(score) {
-  return TIERS.find(t => score <= t.max) ?? TIERS[TIERS.length - 1];
-}
-
 // ─── Kit API helpers ─────────────────────────────────────────
 async function kitFetch(endpoint, method = 'GET', body = null) {
   const res = await fetch(`${KIT_API}${endpoint}`, {
@@ -62,14 +46,7 @@ async function addSubscriberToTag(tagId, emailAddress) {
 
 // ─── Subscribe endpoint ───────────────────────────────────────
 app.post('/api/subscribe', async (req, res) => {
-  const {
-    name,
-    email,
-    level,
-    score = 0,
-    totalQuestions = 10,
-    quizSlug = 'golf-iq',
-  } = req.body;
+  const { name, email, answerFields = {}, scorePercent } = req.body;
 
   if (!email) {
     return res.status(400).json({ error: 'Email is required.' });
@@ -80,37 +57,23 @@ app.post('/api/subscribe', async (req, res) => {
     return res.status(500).json({ error: 'Server configuration error.' });
   }
 
-  const tier = getTier(score);
   const firstName = name?.trim().split(' ')[0] ?? '';
 
   try {
-    // 1. Create or update the subscriber with custom fields.
-    //    Note: quiz_name, quiz_score, quiz_result, and self_reported_level
-    //    must be created as custom fields in your Kit account first.
+    // 1. Create or update the subscriber.
+    //    Kit custom fields required: the_golf_iq_test_answers, the_golf_iq_test_score
     await kitFetch('/subscribers', 'POST', {
       email_address: email,
       first_name: firstName,
       fields: {
-        quiz_name:            quizSlug,
-        quiz_score:           `${score}/${totalQuestions}`,
-        quiz_result:          tier.label,
-        self_reported_level:  level ?? '',
+        ...answerFields,
+        the_golf_iq_test_score: scorePercent ?? '',
       },
     });
 
-    // 2. Upsert both tags, then apply them to the subscriber.
-    const takenTagName  = `quiz:taken:${quizSlug}`;
-    const resultTagName = `quiz:result:${tier.slug}`;
-
-    const [takenId, resultId] = await Promise.all([
-      upsertTag(takenTagName),
-      upsertTag(resultTagName),
-    ]);
-
-    await Promise.all([
-      addSubscriberToTag(takenId,  email),
-      addSubscriberToTag(resultId, email),
-    ]);
+    // 2. Upsert tag and apply to subscriber.
+    const tagId = await upsertTag('the_golf_iq_test');
+    await addSubscriberToTag(tagId, email);
 
     return res.json({ ok: true });
 
