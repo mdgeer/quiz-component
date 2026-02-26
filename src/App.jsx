@@ -78,6 +78,7 @@ export default function App() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Non-2xx response");
+      fireEvent("email_submitted");
       setSubmitted(true);
     } catch {
       setSubmitError(quizConfig.capture.errorMessage);
