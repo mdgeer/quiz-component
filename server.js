@@ -100,6 +100,7 @@ app.post('/api/subscribe', async (req, res) => {
       fields: {
         ...answerFields,
         the_golf_iq_test_score: scorePercent ?? '',
+        subscribed_on: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
       },
     });
 
