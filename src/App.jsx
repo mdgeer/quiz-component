@@ -11,6 +11,15 @@ export default function App() {
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [sessionId] = useState(() => crypto.randomUUID());
+
+  function fireEvent(eventType, questionIndex = null) {
+    fetch("/api/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, quizSlug: quizConfig.quizSlug, eventType, questionIndex }),
+    }).catch(() => {});
+  }
 
   function handleStart() {
     setCurrentScreen("question");
@@ -19,6 +28,7 @@ export default function App() {
     setScore(0);
     setSubmitted(false);
     setSubmitError("");
+    fireEvent("quiz_started");
   }
 
   function handleAnswer(answerIndex) {
@@ -33,8 +43,11 @@ export default function App() {
     setAnswers(newAnswers);
     setScore(newScore);
 
+    fireEvent("answer_selected", currentIndex);
+
     const isLast = currentIndex === quizConfig.questions.length - 1;
     if (isLast) {
+      fireEvent("quiz_completed");
       setCurrentScreen("capture");
     } else {
       setCurrentIndex(currentIndex + 1);

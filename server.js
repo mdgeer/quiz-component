@@ -2,6 +2,16 @@ import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pg from 'pg';
+
+// ─── Database ─────────────────────────────────────────────────
+const pool = process.env.DATABASE_URL
+  ? new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  : null;
+
+if (!pool) {
+  console.warn('[db] DATABASE_URL not set — event tracking disabled');
+}
 
 const app = express();
 app.use(express.json());
@@ -43,6 +53,28 @@ async function addSubscriberToTag(tagId, emailAddress) {
     email_address: emailAddress,
   });
 }
+
+// ─── Event tracking endpoint ──────────────────────────────────
+app.post('/api/event', async (req, res) => {
+  const { sessionId, quizSlug, eventType, questionIndex = null } = req.body;
+
+  if (!sessionId || !quizSlug || !eventType) {
+    return res.status(400).json({ error: 'sessionId, quizSlug, and eventType are required.' });
+  }
+
+  if (pool) {
+    try {
+      await pool.query(
+        'INSERT INTO quiz_events (session_id, quiz_slug, event_type, question_index) VALUES ($1, $2, $3, $4)',
+        [sessionId, quizSlug, eventType, questionIndex]
+      );
+    } catch (err) {
+      console.error('[/api/event]', err.message);
+    }
+  }
+
+  return res.json({ ok: true });
+});
 
 // ─── Subscribe endpoint ───────────────────────────────────────
 app.post('/api/subscribe', async (req, res) => {
