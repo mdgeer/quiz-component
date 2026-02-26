@@ -62,7 +62,7 @@ export default function App() {
       const answer = quizConfig.questions[a.questionIndex].answers[a.answerIndex];
       answerFields[`quiz_answer_${a.questionIndex}`] = `${LETTERS[a.answerIndex]}) ${answer.text}`;
     });
-    const scorePercent = `${Math.round((score / quizConfig.questions.length) * 100)}%`;
+    const scorePercent = `${Math.round((score / quizConfig.questions.length) * 100)}`;
 
     const payload = {
       name,
