@@ -13,11 +13,11 @@ export default function App() {
   const [submitError, setSubmitError] = useState("");
   const [sessionId] = useState(() => crypto.randomUUID());
 
-  function fireEvent(eventType, questionIndex = null) {
+  function fireEvent(eventType, questionIndex = null, score = null) {
     fetch("/api/event", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, quizSlug: quizConfig.quizSlug, eventType, questionIndex }),
+      body: JSON.stringify({ sessionId, quizSlug: quizConfig.quizSlug, eventType, questionIndex, score }),
     }).catch(() => {});
   }
 
@@ -47,7 +47,7 @@ export default function App() {
 
     const isLast = currentIndex === quizConfig.questions.length - 1;
     if (isLast) {
-      fireEvent("quiz_completed");
+      fireEvent("quiz_completed", null, newScore);
       setCurrentScreen("capture");
     } else {
       setCurrentIndex(currentIndex + 1);

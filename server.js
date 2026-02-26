@@ -56,7 +56,7 @@ async function addSubscriberToTag(tagId, emailAddress) {
 
 // ─── Event tracking endpoint ──────────────────────────────────
 app.post('/api/event', async (req, res) => {
-  const { sessionId, quizSlug, eventType, questionIndex = null } = req.body;
+  const { sessionId, quizSlug, eventType, questionIndex = null, score = null } = req.body;
 
   if (!sessionId || !quizSlug || !eventType) {
     return res.status(400).json({ error: 'sessionId, quizSlug, and eventType are required.' });
@@ -65,8 +65,8 @@ app.post('/api/event', async (req, res) => {
   if (pool) {
     try {
       await pool.query(
-        'INSERT INTO quiz_events (session_id, quiz_slug, event_type, question_index) VALUES ($1, $2, $3, $4)',
-        [sessionId, quizSlug, eventType, questionIndex]
+        'INSERT INTO quiz_events (session_id, quiz_slug, event_type, question_index, score) VALUES ($1, $2, $3, $4, $5)',
+        [sessionId, quizSlug, eventType, questionIndex, score]
       );
     } catch (err) {
       console.error('[/api/event]', err.message);
