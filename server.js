@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
@@ -14,6 +16,7 @@ if (!pool) {
 }
 
 const app = express();
+app.use(helmet());
 app.use(express.json());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,11 +80,19 @@ app.post('/api/event', async (req, res) => {
 });
 
 // ─── Subscribe endpoint ───────────────────────────────────────
-app.post('/api/subscribe', async (req, res) => {
+const subscribeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 5,
+  message: { error: 'Too many requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.post('/api/subscribe', subscribeLimiter, async (req, res) => {
   const { name, email, answerFields = {}, scorePercent } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required.' });
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'A valid email is required.' });
   }
 
   if (!process.env.KIT_API_KEY) {
