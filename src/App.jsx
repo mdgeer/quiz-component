@@ -1,10 +1,9 @@
 import { useState } from "react";
-import quizConfig from "./quizConfig";
 import IntroScreen from "./components/IntroScreen";
 import QuestionScreen from "./components/QuestionScreen";
 import CaptureScreen from "./components/CaptureScreen";
 
-export default function App() {
+export default function App({ config }) {
   const [currentScreen, setCurrentScreen] = useState("intro");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
@@ -17,7 +16,7 @@ export default function App() {
     fetch("/api/event", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, quizSlug: quizConfig.quizSlug, eventType, questionIndex, score }),
+      body: JSON.stringify({ sessionId, quizSlug: config.quizSlug, eventType, questionIndex, score }),
     }).catch(() => {});
   }
 
@@ -32,7 +31,7 @@ export default function App() {
   }
 
   function handleAnswer(answerIndex) {
-    const question = quizConfig.questions[currentIndex];
+    const question = config.questions[currentIndex];
     const isCorrect = question.answers[answerIndex].correct;
     const newAnswers = [
       ...answers,
@@ -45,7 +44,7 @@ export default function App() {
 
     fireEvent("answer_selected", currentIndex);
 
-    const isLast = currentIndex === quizConfig.questions.length - 1;
+    const isLast = currentIndex === config.questions.length - 1;
     if (isLast) {
       fireEvent("quiz_completed", null, newScore);
       setCurrentScreen("capture");
@@ -59,10 +58,10 @@ export default function App() {
     const LETTERS = ["A", "B", "C", "D"];
     const answerFields = {};
     answers.forEach((a) => {
-      const answer = quizConfig.questions[a.questionIndex].answers[a.answerIndex];
+      const answer = config.questions[a.questionIndex].answers[a.answerIndex];
       answerFields[`quiz_answer_${a.questionIndex}`] = `${LETTERS[a.answerIndex]}) ${answer.text}`;
     });
-    const scorePercent = `${Math.round((score / quizConfig.questions.length) * 100)}`;
+    const scorePercent = `${Math.round((score / config.questions.length) * 100)}`;
 
     const payload = {
       name,
@@ -72,7 +71,7 @@ export default function App() {
     };
 
     try {
-      const res = await fetch(quizConfig.capture.submitEndpoint, {
+      const res = await fetch(config.capture.submitEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -81,21 +80,21 @@ export default function App() {
       fireEvent("email_submitted");
       setSubmitted(true);
     } catch {
-      setSubmitError(quizConfig.capture.errorMessage);
+      setSubmitError(config.capture.errorMessage);
     }
   }
 
   if (currentScreen === "intro") {
-    return <IntroScreen config={quizConfig.intro} onStart={handleStart} />;
+    return <IntroScreen config={config.intro} onStart={handleStart} />;
   }
 
   if (currentScreen === "question") {
     return (
       <QuestionScreen
-        config={quizConfig}
-        question={quizConfig.questions[currentIndex]}
+        config={config}
+        question={config.questions[currentIndex]}
         currentIndex={currentIndex}
-        totalQuestions={quizConfig.questions.length}
+        totalQuestions={config.questions.length}
         onAnswer={handleAnswer}
       />
     );
@@ -103,7 +102,7 @@ export default function App() {
 
   return (
     <CaptureScreen
-      config={quizConfig.capture}
+      config={config.capture}
       submitted={submitted}
       submitError={submitError}
       onSubmit={handleSubmit}
