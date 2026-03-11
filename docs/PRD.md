@@ -26,9 +26,8 @@ The first quiz — The Golf IQ Test — serves as the template for all future qu
 1. User lands on a quiz URL (e.g. `quiz.thedivot.net/golf-iq`)
 2. Intro screen — headline, description, CTA to start
 3. 10 questions — one at a time, with image, context, and 4 answer choices
-4. Brief feedback shown after each answer (correct/incorrect)
-5. Email capture screen — user enters name and email to receive their score
-6. Success state — confirmation message shown
+4. Email capture screen — user enters name and email to receive their score
+5. Success state — confirmation message shown
 
 ---
 
